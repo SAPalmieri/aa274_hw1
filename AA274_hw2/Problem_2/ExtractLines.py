@@ -118,7 +118,23 @@ def SplitLinesRecursive(theta, rho, startIdx, endIdx, params):
     # It should call 'FitLine()' to fit individual line segments
     # In should call 'FindSplit()' to find an index to split at
     #################
+    i = 1
+    while i <= endIdx:
+        alpha, r = FitLine(theta,rho)
+        #calculate D, if less than d
+        D = r
+        if D < params.LINE_POINT_DIST_THRESHOLD:
+            i = i +1
+        else:
+            idx = FindSplit(theta,rho,alpha,r,params)
+            S1 = S[0:idx+1]
+            S2 = S[idx:]
+            L.append(S1)
+            L.append(S2)
+    
+    #merge colinear seats in L
 
+                
     raise NotImplementedError
 
     return alpha, r, idx
@@ -146,7 +162,16 @@ def FindSplit(theta, rho, alpha, r, params):
     # not divide into segments smaller than 'MIN_POINTS_PER_SEGMENT'
     # return -1 if no split is possiple
     #################
-
+    for i in range(len(theta)):
+        #calculate the distance of each point to the line
+        dist = (rho[i] * np.cos(theta[i]-alpha) - r)**2
+        #calculate the segment 
+        seg = len(theta) / len(theta[0:i+1])
+        #if the distance exceeds this threshold and it doesnt split too hard
+        if dist > params.LINE_POINT_DIST_THRESHOLD and np.abs(len(seg)) > params.MIN_POINTS_PER_SEGMENT: #if the distance exceeds this threshold
+            splitIdx = i
+        else:
+            return -1
     raise NotImplementedError
 
     return splitIdx
@@ -170,6 +195,11 @@ def FitLine(theta, rho):
     # Implement a function to fit a line to polar data points
     # based on the solution to the least squares problem (see Hw)
     #################
+    n = len(theta)
+    x1 = np.linalg.sum(rho*np.sin(2*theta))- 2/n*np.linalg.sum(np.linalg.sum(rho*np.cos(theta)*np.sin(theta)))
+    x2 = np.linalg.sum(rho*np.cos(2*theta))- 2/n*np.linalg.sum(np.linalg.sum(rho*np.cos(theta+ theta)))
+    alpha = 1/2 * np.arctan2(x1,x2) + np.pi/2
+    r = 1/n * np.linalg.sum(rho*cos(theta-alpha))
 
     raise NotImplementedError
 
@@ -197,7 +227,7 @@ def MergeColinearNeigbors(theta, rho, alpha, r, pointIdx, params):
     #       points from two adjacent segments. If this line cannot be
     #       split, then accept the merge. If it can be split, do not merge.
     #################
-
+    
     raise NotImplementedError
 
     return alphaOut, rOut, pointIdxOut
